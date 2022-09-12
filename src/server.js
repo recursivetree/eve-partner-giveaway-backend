@@ -1,5 +1,6 @@
 import express from "express"
 import log from "loglevel"
+import rateLimit from "express-rate-limit";
 import storage from "./storage.js";
 
 log.setDefaultLevel("DEBUG")
@@ -9,6 +10,14 @@ app.use(express.json())
 
 const db = storage(process.env.STORAGEFILE || "storage.json", process.env.SAVEINTERVAL || 60*1000)
 
+const apiRateLimit = rateLimit({
+    windowMs: 10 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false,
+})
+
+app.use("/enter",apiRateLimit)
 app.post("/enter",(req,res)=>{
     const eve_character = req.body["character_id"]
 
