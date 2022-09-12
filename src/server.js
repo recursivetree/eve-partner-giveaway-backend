@@ -7,7 +7,7 @@ log.setDefaultLevel("DEBUG")
 const app = express()
 app.use(express.json())
 
-const db = storage("data/storage.json")
+const db = storage(process.env.STORAGEFILE || "storage.json", process.env.SAVEINTERVAL || 60*1000)
 
 app.post("/enter",(req,res)=>{
     const eve_character = req.body["character_id"]
@@ -51,6 +51,6 @@ app.post("/enter",(req,res)=>{
     })
 })
 
-app.listen(8000,()=>{
+app.listen(process.env.PORT || 80,()=>{
     log.info("server is running")
 })

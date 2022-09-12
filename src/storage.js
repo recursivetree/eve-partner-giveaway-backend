@@ -6,13 +6,13 @@ export default (path)=>{
 }
 
 class Storage {
-    constructor(path) {
+    constructor(path, saveInterval) {
         this.path = path
         this.data = []
         this.dirty = false
 
         this.#load_from_disk().then(()=>{
-            setInterval(()=>this.#save_to_disk(),10*1000) // save once a minute
+            setInterval(()=>this.#save_to_disk(),saveInterval) // save once a minute
         })
     }
 
