@@ -17,6 +17,12 @@ const apiRateLimit = rateLimit({
     legacyHeaders: false,
 })
 
+app.get("/status",(req,res)=>{
+    res.json({
+        "status":"ok"
+    })
+})
+
 app.use("/enter",apiRateLimit)
 app.post("/enter",(req,res)=>{
     const eve_character = req.body["character_id"]
