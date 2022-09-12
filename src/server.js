@@ -7,7 +7,7 @@ log.setDefaultLevel("DEBUG")
 const app = express()
 app.use(express.json())
 
-const db = storage("storage.json")
+const db = storage("data/storage.json")
 
 app.post("/enter",(req,res)=>{
     const eve_character = req.body["character_id"]
