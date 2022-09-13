@@ -1,8 +1,8 @@
 import {writeFile, readFile} from "fs/promises"
 import log from "loglevel"
 
-export default (path)=>{
-    return new Storage(path)
+export default (path, saveInterval)=>{
+    return new Storage(path,saveInterval)
 }
 
 class Storage {
@@ -10,6 +10,8 @@ class Storage {
         this.path = path
         this.data = []
         this.dirty = false
+
+        log.debug("i", saveInterval)
 
         this.#load_from_disk().then(()=>{
             setInterval(()=>this.#save_to_disk(),saveInterval) // save once a minute
