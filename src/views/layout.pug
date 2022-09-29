@@ -1,0 +1,19 @@
+doctype html
+html
+    head
+        title Admin Panel
+
+        block head
+
+        style
+            include style.css
+
+    body
+        div.row.fullwidth.center
+            div.column.content-container
+                h1 Admin Panel
+
+                if error
+                    p.error= error
+
+                block content

@@ -1,0 +1,26 @@
+extends layout.pug
+
+block content
+    form(action="", method="POST")
+        div.column.fullwidth
+            h2 Authentication Token
+            input(type="password",name="auth_token",placeholder="Enter the authentication token", value=auth_token || "")
+        div.column.group
+            h2 Draft Participants
+            div.row
+                input(type="number", placeholder="Enter number of people to draft",name="participants", value=draft_count).space-r
+                button(type="submit", name="draft") Draft
+        div.column.group
+            h2 Reset Participants
+            button(type="submit", name="reset") Reset
+
+        if participants
+            div.column.group
+                h2 Drafted Characters
+                if participants.length == 0
+                    span No participants
+                else
+                    ul
+                        each participant in participants
+                            li
+                                a(href="https://zkillboard.com/character/"+participant, target="_blank")= participant
