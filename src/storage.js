@@ -4,11 +4,13 @@ import * as path from "path";
 import dateFormat from "dateformat";
 
 export default (path, saveInterval)=>{
-    return new Storage(path,saveInterval)
+    return new Promise((res,rej)=>{
+        new Storage(path,saveInterval, res)
+    })
 }
 
 class Storage {
-    constructor(path, saveInterval) {
+    constructor(path, saveInterval, res) {
         this.path = path
         this.data = {}
         this.dirty = false
@@ -18,6 +20,7 @@ class Storage {
 
         this.#load_from_disk().then(()=>{
             setInterval(()=>this.#save_to_disk(),saveInterval) // save once a minute
+            res(this)
         })
     }
 
@@ -60,6 +63,9 @@ class Storage {
             this.data = JSON.parse(await readFile(this.path))
             log.debug(`loaded db disk`)
         } catch (e) {
+            try {
+                await this.backup()
+            } catch (e) {}
             log.error("Could not read existing db, starting with a new and empty file")
         }
     }

@@ -5,6 +5,11 @@ block content
         div.column.fullwidth
             h2 Authentication Token
             input(type="password",name="auth_token",placeholder="Enter the authentication token", value=auth_token || "")
+
+        div.column.group
+            h2 Reset Cycle
+            span The current reset cycle is #{reset_cycle}.
+
         div.column.group
             h2 Draft Participants
             div.row

@@ -11,12 +11,16 @@ app.set('views', 'src/views');
 app.use(express.json())
 app.use(express.urlencoded())
 
-const db = storage(process.env.STORAGEFILE || "storage_db.json", process.env.SAVEINTERVAL || 60*1000)
+const db = await storage(process.env.STORAGEFILE || "storage_db.json", process.env.SAVEINTERVAL || 60*1000)
 const AUTH_TOKEN = process.env.AUTHTOKEN || "mal's sexy voice"
 
 db.writeData((db)=>{
     if (!db.entries) {
         db.entries = []
+    }
+
+    if(db.reset_cycle===undefined){
+        db.reset_cycle = 0
     }
 })
 
@@ -35,8 +39,10 @@ const adminRateLimit = rateLimit({
 })
 
 app.get("/status",(req,res)=>{
+    const reset_cycle = db.readData(data=>data.reset_cycle)
     res.json({
-        "status":"ok"
+        "status":"ok",
+        "reset_cycle":reset_cycle
     })
 })
 
@@ -93,14 +99,20 @@ const admin = express.Router()
 admin.use(adminRateLimit)
 
 admin.get("/",(req,res)=>{
-    res.render('panel', {})
+    const reset_cycle = db.readData(data=>data.reset_cycle)
+    res.render('panel', {reset_cycle})
 })
 admin.post("/",async (req, res) => {
+    let reset_cycle = db.readData(data=>{
+        return db.reset_cycle
+    })
+
     const auth_token = req.body.auth_token
     if (auth_token !== AUTH_TOKEN) {
         res.render('panel', {
             auth_token,
-            error: "Invalid authentication token"
+            error: "Invalid authentication token",
+            reset_cycle,
         })
         return
     }
@@ -112,7 +124,8 @@ admin.post("/",async (req, res) => {
         if (!draft_count) {
             res.render('panel', {
                 auth_token,
-                error: "You need to provide a number of winners"
+                error: "You need to provide a number of winners",
+                reset_cycle
             })
             return
         }
@@ -122,7 +135,8 @@ admin.post("/",async (req, res) => {
         } catch (e) {
             res.render('panel', {
                 auth_token,
-                error: "You need to provide a valid number of winners"
+                error: "You need to provide a valid number of winners",
+                reset_cycle
             })
             return
         }
@@ -137,15 +151,19 @@ admin.post("/",async (req, res) => {
     if (req.body.reset || req.body.reset === '') {
         await db.backup()
         db.writeData(data=>{
+            data.reset_cycle++
             data.entries = []
         })
         log.debug("cleared participants")
     }
 
+    reset_cycle = db.readData(data=>data.reset_cycle)
+
     res.render('panel', {
         auth_token,
         draft_count,
-        participants
+        participants,
+        reset_cycle
     })
 })
 
