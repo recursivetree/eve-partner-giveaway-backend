@@ -2,7 +2,6 @@ import express from "express"
 import log from "loglevel"
 import rateLimit from "express-rate-limit";
 import storage from "./storage.js";
-import * as path from "path";
 
 log.setDefaultLevel("DEBUG")
 
@@ -12,8 +11,14 @@ app.set('views', 'src/views');
 app.use(express.json())
 app.use(express.urlencoded())
 
-const db = storage(process.env.STORAGEFILE || "storage.json", process.env.SAVEINTERVAL || 60*1000)
+const db = storage(process.env.STORAGEFILE || "storage_db.json", process.env.SAVEINTERVAL || 60*1000)
 const AUTH_TOKEN = process.env.AUTHTOKEN || "mal's sexy voice"
+
+db.writeData((db)=>{
+    if (!db.entries) {
+        db.entries = []
+    }
+})
 
 const apiRateLimit = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
@@ -59,7 +64,11 @@ app.post("/enter",(req,res)=>{
 
     let character_id = parseInt(eve_character)
 
-    if (db.contains(character_id)){
+    const already_entered = db.readData((data)=>{
+        return data.entries.includes(character_id)
+    })
+
+    if (already_entered){
         res.status(400)
             .json({
                 success: false,
@@ -68,7 +77,9 @@ app.post("/enter",(req,res)=>{
         return
     }
 
-    db.save(character_id)
+    db.writeData((data)=>{
+        data.entries.push(character_id)
+    })
 
     log.debug(`added character ${character_id}`)
 
@@ -116,7 +127,7 @@ admin.post("/",async (req, res) => {
             return
         }
 
-        participants = db.getData()
+        participants = db.readData((data)=>data.entries)
             .map(value => ({value, sort: Math.random()}))
             .sort((a, b) => a.sort - b.sort)
             .map(({value}) => value)
@@ -125,7 +136,9 @@ admin.post("/",async (req, res) => {
 
     if (req.body.reset || req.body.reset === '') {
         await db.backup()
-        db.clear()
+        db.writeData(data=>{
+            data.entries = []
+        })
         log.debug("cleared participants")
     }
 

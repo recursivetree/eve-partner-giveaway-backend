@@ -10,7 +10,7 @@ export default (path, saveInterval)=>{
 class Storage {
     constructor(path, saveInterval) {
         this.path = path
-        this.data = []
+        this.data = {}
         this.dirty = false
 
         log.debug("data save interval: ", saveInterval)
@@ -21,17 +21,13 @@ class Storage {
         })
     }
 
-    getData(){
-        return this.data
-    }
-
-    save(data){
-        this.data.push(data)
+    writeData(cb){
+        const modified = cb(this.data)
         this.dirty = true
     }
 
-    contains(data){
-        return this.data.includes(data)
+    readData(cb){
+        return cb(this.data)
     }
 
     async backup(){
@@ -47,17 +43,12 @@ class Storage {
         log.debug("backed up data as "+out)
     }
 
-    clear(){
-        this.data = []
-        this.dirty = true
-    }
-
     async #save_to_disk(){
         if (this.dirty){
             try {
                 await writeFile(this.path, JSON.stringify(this.data))
                 this.dirty = false
-                log.debug(`saved ${this.data.length} entries to disk`)
+                log.debug(`saved db to disk`)
             } catch (e) {
                 log.error("Failed to save data",e)
             }
@@ -66,10 +57,10 @@ class Storage {
 
     async #load_from_disk(){
         try {
-            this.data  = JSON.parse(await readFile(this.path))
-            log.debug(`loaded ${this.data.length} entries from disk`)
+            this.data = JSON.parse(await readFile(this.path))
+            log.debug(`loaded db disk`)
         } catch (e) {
-            log.error("Could not read existing storage entries, starting with a new and empty file")
+            log.error("Could not read existing db, starting with a new and empty file")
         }
     }
 }
