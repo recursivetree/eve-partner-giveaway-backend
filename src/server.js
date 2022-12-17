@@ -70,6 +70,11 @@ app.post("/enter",(req,res)=>{
 
     let character_id = parseInt(eve_character)
 
+    if (character_id > Number.MAX_SAFE_INTEGER){
+        res.status(500)
+        return
+    }
+
     const already_entered = db.readData((data)=>{
         return data.entries.includes(character_id)
     })
