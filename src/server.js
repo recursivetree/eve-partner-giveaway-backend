@@ -41,7 +41,7 @@ const adminRateLimit = rateLimit({
 app.get("/status",(req,res)=>{
     const reset_cycle = db.readData(data=>data.reset_cycle)
     res.json({
-        "status":"ok",
+        "status":"no giveaway",
         "reset_cycle":reset_cycle
     })
 })
